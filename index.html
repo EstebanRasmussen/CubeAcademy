@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Cube Trainer</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 3 3'><rect width='3' height='3' fill='%23111'/><rect x='.1' y='.1' width='.8' height='.8' fill='%23ffd500'/><rect x='1.1' y='.1' width='.8' height='.8' fill='%23ffd500'/><rect x='2.1' y='.1' width='.8' height='.8' fill='%23009b48'/><rect x='.1' y='1.1' width='.8' height='.8' fill='%23ff5800'/><rect x='1.1' y='1.1' width='.8' height='.8' fill='%23ffd500'/><rect x='2.1' y='1.1' width='.8' height='.8' fill='%23ffd500'/><rect x='.1' y='2.1' width='.8' height='.8' fill='%23ffd500'/><rect x='1.1' y='2.1' width='.8' height='.8' fill='%230046ad'/><rect x='2.1' y='2.1' width='.8' height='.8' fill='%23ffd500'/></svg>" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">Cube Trainer</div>
+      <div class="tabs" role="tablist">
+        <button class="tab" data-appmode="train" data-i18n="mode.train"></button>
+        <button class="tab" data-appmode="guide" data-i18n="mode.guide"></button>
+      </div>
+      <ol class="steps" id="steps"></ol>
+      <div class="pill" id="solverStatus"></div>
+      <select id="langSelect" data-i18n-title="lang.label"></select>
+    </header>
+
+    <main class="layout">
+      <!-- Camera / scan -->
+      <section class="panel" id="scanPanel">
+        <h2 data-i18n="webcam"></h2>
+        <div class="video-wrap" id="videoWrap">
+          <div class="mirror" id="mirror"></div>
+          <canvas id="overlay"></canvas>
+          <div class="video-hint" id="videoHint" data-i18n="video.hintStart"></div>
+        </div>
+        <div class="row">
+          <button id="btnCamera" class="primary" data-i18n="btn.startCam"></button>
+          <button id="btnResetScan" data-i18n="btn.resetScan"></button>
+          <select id="cameraSelect" data-i18n-title="cam.choose" hidden></select>
+          <button id="btnLock" hidden data-i18n-title="lock.title" data-i18n="btn.lock"></button>
+        </div>
+        <div class="guide-box" id="guideBox">
+          <label class="small"><input type="checkbox" id="guided" /> <span data-i18n="guided.label"></span></label>
+          <div class="guide-text" id="guideText"></div>
+          <div class="chips" id="faceChips" data-i18n-title="chips.title"></div>
+        </div>
+        <div class="row small">
+          <label><span data-i18n="detect.label"></span>
+            <select id="detectMode">
+              <option value="auto" data-i18n="detect.auto"></option>
+              <option value="guide" data-i18n="detect.guide"></option>
+            </select>
+          </label>
+          <label data-i18n-title="debug.title"><input type="checkbox" id="showCandidates" /> debug</label>
+          <span id="detStats"></span>
+        </div>
+        <p class="help" id="scanHelp"></p>
+        <div class="net" id="net"></div>
+        <div class="msg" id="scanMsg" hidden></div>
+        <div class="row" id="fixRow" hidden>
+          <button id="btnRetryAssemble" class="primary" data-i18n="btn.retry"></button>
+          <button id="btnRescan" data-i18n="btn.resetScan"></button>
+        </div>
+        <details class="alt">
+          <summary data-i18n="alt.summary"></summary>
+          <div class="row">
+            <button id="btnSolved" data-i18n="btn.solved"></button>
+            <button id="btnDemo" data-i18n="btn.demo" data-i18n-title="demo.title"></button>
+            <button id="btnVideo" data-i18n="btn.video" data-i18n-title="video.title"></button>
+            <input type="file" id="videoFile" accept="video/*" hidden />
+          </div>
+          <div class="row">
+            <button id="btnResetCalib" class="ghost" data-i18n="btn.resetCalib" data-i18n-title="resetCalib.title"></button>
+          </div>
+          <label class="field">
+            <span data-i18n="scramble.label"></span>
+            <span class="row"><input id="scrambleInput" dir="ltr" data-i18n-placeholder="scramble.placeholder" /><button id="btnScramble" data-i18n="btn.use"></button></span>
+          </label>
+        </details>
+        <p class="privacy" data-i18n="privacy"></p>
+      </section>
+
+      <!-- 3D cube and moves -->
+      <section class="panel center">
+        <div class="cube-head">
+          <h2 id="phaseTitle"></h2>
+          <div class="case-badge" id="caseBadge" hidden></div>
+        </div>
+        <p class="hold" id="holdText"></p>
+        <ol class="stages" id="stageList" hidden></ol>
+        <p class="stage-info" id="stageInfo" hidden></p>
+        <div class="cube-stage">
+          <div id="cube3d" class="cube3d"></div>
+          <div id="practiceCard" class="practice-card" hidden>
+            <div id="bigDiagram"></div>
+            <div class="timer" id="timer">0.00</div>
+          </div>
+        </div>
+        <div class="regrip" id="regrip" hidden></div>
+        <div class="moves" id="moves" dir="ltr" aria-live="polite"></div>
+        <div class="controls" id="controls" dir="ltr">
+          <button id="btnFirst" data-i18n-title="ctrl.first">⏮</button>
+          <button id="btnPrev" data-i18n-title="ctrl.prev">◀</button>
+          <button id="btnPlay" data-i18n-title="ctrl.play">▶</button>
+          <button id="btnNext" data-i18n-title="ctrl.next">▶▶</button>
+          <label class="speed"><span data-i18n="speed"></span> <input type="range" id="speed" min="150" max="1000" step="50" /></label>
+          <label class="speed"><input type="checkbox" id="showFingers" /> <span data-i18n="fingers"></span></label>
+        </div>
+        <div class="row actions">
+          <button id="btnShowAlg" hidden data-i18n="btn.showAlg"></button>
+          <button id="btnDone" class="primary big" hidden data-i18n="btn.done"></button>
+        </div>
+        <div class="row actions">
+          <button id="btnLost" class="ghost" hidden data-i18n="btn.lost"></button>
+          <button id="btnSkip" class="ghost" hidden data-i18n="btn.skip"></button>
+          <button id="btnToTrain" class="ghost" hidden data-i18n="mode.train"></button>
+        </div>
+      </section>
+
+      <!-- Algorithm sets -->
+      <section class="panel" id="casesPanel">
+        <h2 data-i18n="cases.title"></h2>
+        <div class="row">
+          <select id="setSelect"></select>
+        </div>
+        <div class="row">
+          <label class="radio"><input type="radio" name="mode" value="same" /> <span data-i18n="mode.same"></span></label>
+          <label class="radio"><input type="radio" name="mode" value="random" /> <span data-i18n="mode.random"></span></label>
+        </div>
+        <div class="row small">
+          <button id="btnSelectNone" class="ghost" data-i18n="btn.selectNone"></button>
+          <span id="selCount"></span>
+        </div>
+        <div id="caseDetail" class="case-detail"></div>
+        <div id="customForm" class="custom-form" hidden>
+          <p class="help" data-i18n="custom.empty"></p>
+          <input id="customName" data-i18n-placeholder="custom.name" maxlength="24" />
+          <input id="customAlg" dir="ltr" data-i18n-placeholder="custom.alg" spellcheck="false" />
+          <label class="small"><span data-i18n="custom.kind"></span>
+            <select id="customKind">
+              <option value="pll" data-i18n="kind.pll"></option>
+              <option value="oll" data-i18n="kind.oll"></option>
+              <option value="f2l" data-i18n="kind.f2l"></option>
+            </select>
+          </label>
+          <button id="btnAddCustom" data-i18n="btn.add"></button>
+          <div class="err" id="customErr"></div>
+        </div>
+        <p class="help small" data-i18n="notation.help"></p>
+        <div id="caseGrid" class="case-grid"></div>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
